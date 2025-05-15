@@ -17,6 +17,8 @@ import {
 import animationData from '../assets/animation.json';
 import '../css/Home.css';
 import kenaiLogo from '../assets/kenaiLogo.png';
+import stringSimilarity from 'string-similarity';
+
 
 ChartJS.register(
   CategoryScale,
@@ -280,23 +282,18 @@ const Home = () => {
     setTranscribedText('');
   };
 
-const handleMessage = (text) => {
+  const handleMessage = (text) => {
   const trimmed = text.trim();
   if (trimmed === '') return;
 
   setMessages(prev => [...prev, { text: trimmed, sender: 'user' }]);
 
-  const normalizedInput = trimmed.toLowerCase();
-  let response = botResponses[trimmed];
+  const questionList = Object.keys(botResponses);
+  const match = stringSimilarity.findBestMatch(trimmed, questionList);
+  const bestMatch = match.bestMatch;
 
-  // Custom handling for "hi"
-  if (normalizedInput === 'hi') {
-    response = {
-      response: "Hello! How can I help you?",
-    };
-  }
-
-  if (response) {
+  if (bestMatch.rating > 0.5) { // Adjust threshold as needed
+    const response = botResponses[bestMatch.target];
     let index = 0;
     let animatedText = '';
     const interval = setInterval(() => {
@@ -325,7 +322,6 @@ const handleMessage = (text) => {
       }
     }, 30);
   } else {
-    // Default error message for unrecognized input
     const errorMsg = "I'm sorry, I didn't understand that.";
     let index = 0;
     let animatedText = '';
@@ -351,6 +347,79 @@ const handleMessage = (text) => {
     }, 30);
   }
 };
+
+
+// const handleMessage = (text) => {
+//   const trimmed = text.trim();
+//   if (trimmed === '') return;
+
+//   setMessages(prev => [...prev, { text: trimmed, sender: 'user' }]);
+
+//   const normalizedInput = trimmed.toLowerCase();
+//   let response = botResponses[trimmed];
+
+//   // Custom handling for "hi"
+//   if (normalizedInput === 'hi') {
+//     response = {
+//       response: "Hello! How can I help you?",
+//     };
+//   }
+
+//   if (response) {
+//     let index = 0;
+//     let animatedText = '';
+//     const interval = setInterval(() => {
+//       if (index < response.response.length) {
+//         animatedText += response.response[index];
+//         setMessages(prev => {
+//           const last = prev[prev.length - 1];
+//           if (last && last.sender === 'bot' && last.typing) {
+//             return [...prev.slice(0, -1), { ...last, text: animatedText }];
+//           } else {
+//             return [...prev, { text: animatedText, sender: 'bot', typing: true }];
+//           }
+//         });
+//         index++;
+//       } else {
+//         clearInterval(interval);
+//         setMessages(prev => [
+//           ...prev.slice(0, -1),
+//           {
+//             text: response.response,
+//             sender: 'bot',
+//             graphType: response.graphType || null,
+//             graphData: response.graphData || null,
+//           },
+//         ]);
+//       }
+//     }, 30);
+//   } else {
+//     // Default error message for unrecognized input
+//     const errorMsg = "I'm sorry, I didn't understand that.";
+//     let index = 0;
+//     let animatedText = '';
+//     const interval = setInterval(() => {
+//       if (index < errorMsg.length) {
+//         animatedText += errorMsg[index];
+//         setMessages(prev => {
+//           const last = prev[prev.length - 1];
+//           if (last && last.sender === 'bot' && last.typing) {
+//             return [...prev.slice(0, -1), { ...last, text: animatedText }];
+//           } else {
+//             return [...prev, { text: animatedText, sender: 'bot', typing: true }];
+//           }
+//         });
+//         index++;
+//       } else {
+//         clearInterval(interval);
+//         setMessages(prev => [
+//           ...prev.slice(0, -1),
+//           { text: errorMsg, sender: 'bot' }
+//         ]);
+//       }
+//     }, 30);
+//   }
+// };
 
 
   
