@@ -282,17 +282,47 @@ const Home = () => {
     setTranscribedText('');
   };
 
-  const handleMessage = (text) => {
-  const trimmed = text.trim();
+const handleMessage = (text) => {
+  const trimmed = text.trim().toLowerCase().replace(/[^\w\s]/gi, '');
   if (trimmed === '') return;
 
   setMessages(prev => [...prev, { text: trimmed, sender: 'user' }]);
 
+  // Check for greetings
+  const greetings = ['hi', 'hello', 'hey'];
+  if (greetings.includes(trimmed)) {
+    const greetingResponse = "Hello, how can I help you?";
+    let index = 0;
+    let animatedText = '';
+    const interval = setInterval(() => {
+      if (index < greetingResponse.length) {
+        animatedText += greetingResponse[index];
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last && last.sender === 'bot' && last.typing) {
+            return [...prev.slice(0, -1), { ...last, text: animatedText }];
+          } else {
+            return [...prev, { text: animatedText, sender: 'bot', typing: true }];
+          }
+        });
+        index++;
+      } else {
+        clearInterval(interval);
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          { text: greetingResponse, sender: 'bot' }
+        ]);
+      }
+    }, 30);
+    return; // Stop further processing
+  }
+
+  // Bot response matching
   const questionList = Object.keys(botResponses);
   const match = stringSimilarity.findBestMatch(trimmed, questionList);
   const bestMatch = match.bestMatch;
 
-  if (bestMatch.rating > 0.5) { // Adjust threshold as needed
+  if (bestMatch.rating > 0.5) {
     const response = botResponses[bestMatch.target];
     let index = 0;
     let animatedText = '';
@@ -347,6 +377,7 @@ const Home = () => {
     }, 30);
   }
 };
+
 
 
 // const handleMessage = (text) => {
